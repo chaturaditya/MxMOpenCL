@@ -7,4 +7,4 @@ add_definitions(-Wall)
 
 add_executable(mxm
             test-cl.c)
-
+target_link_libraries(mxm OpenCL)

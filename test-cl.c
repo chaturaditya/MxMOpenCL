@@ -11,9 +11,9 @@
 #include <stdbool.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <OpenCL/opencl.h>
+#include <CL/opencl.h>
 
-#define MATRIX_RANK 2048
+#define MATRIX_RANK 512
 #define DATA_SIZE MATRIX_RANK*MATRIX_RANK
 const unsigned int SUCCESS = 0;
 
@@ -32,7 +32,7 @@ int main(int argc, char** argv){
     size_t global[2];                   // global domain size for our calculation
     size_t local[2];                    // local domain size for our calculation
 
-    cl_platform_id platform_id;         // platform id
+ 
     cl_device_id device_id;             // compute device id 
     cl_context context;                 // compute context
     cl_command_queue commands;          // compute command queue
@@ -72,9 +72,15 @@ int main(int argc, char** argv){
 
     prelude_begin = clock();
 
+
+	cl_uint num_platforms;
+    err = clGetPlatformIDs(0, NULL, &num_platforms);
+
+	cl_platform_id platform[num_platforms];
+    err = clGetPlatformIDs(num_platforms, platform, NULL); 
   // Connect to first platform
   //
-  err = clGetPlatformIDs(1,&platform_id,NULL);
+
   if (err != CL_SUCCESS)
   {
     printf("Error: Failed to find an OpenCL platform!\n");
@@ -82,7 +88,7 @@ int main(int argc, char** argv){
     return EXIT_FAILURE;
   }
 
-    if(show_info(platform_id) != SUCCESS){
+    if(show_info(platform[1]) != SUCCESS){
         printf("Error: Showing information!\n");
         printf("Test failed\n");
         return EXIT_FAILURE;
@@ -93,7 +99,7 @@ int main(int argc, char** argv){
     fpga = 1;
 #endif
 
-    err = clGetDeviceIDs(platform_id, 
+    err = clGetDeviceIDs(platform[1], 
                         fpga ? CL_DEVICE_TYPE_ACCELERATOR : CL_DEVICE_TYPE_CPU,
                         1, 
                         &device_id, 
@@ -150,7 +156,7 @@ int main(int argc, char** argv){
         size_t n = n_i;
         program = clCreateProgramWithBinary(context, 1, &device_id, &n,
                                           (const unsigned char **) &kernelbinary, &status, &err);
-    }
+    }										//END OF IF FOR FPGA
     else{
         unsigned char *kernelsrc;
         char *clsrc = argv[1];
@@ -163,7 +169,7 @@ int main(int argc, char** argv){
         }
 
         program = clCreateProgramWithSource(context, 1, (const char **) &kernelsrc, NULL, &err);
-    }
+    }										//END OF ELSE FOR CPU
 
 
     if ((!program) || (err!=CL_SUCCESS)) {
@@ -266,8 +272,8 @@ int main(int argc, char** argv){
 
     global[0] = MATRIX_RANK;
     global[1] = MATRIX_RANK;
-    local[0] = MATRIX_RANK;
-    local[1] = MATRIX_RANK;
+    local[0] = MATRIX_RANK/16;
+    local[1] = MATRIX_RANK/16;
     clock_t kernel_begin, kernel_end;                                                                                                                    
     double kernel_time;                                                                                                                     
     kernel_begin = clock();  
@@ -275,7 +281,7 @@ int main(int argc, char** argv){
 
     err = clEnqueueNDRangeKernel(commands, 
                                 kernel, 
-                                2, 
+                                1, 
                                 NULL, 
                                 (size_t*)&global, 
                                 /*(size_t*)&local*/NULL, 

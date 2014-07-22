@@ -1,21 +1,39 @@
-__kernel //__attribute__ ((reqd_work_group_size(2048, 2048, 1)))
-void mmult(__global int* a, __global int* b, __global int* output, __local float *C)
+__kernel// __attribute__ ((reqd_work_group_size(16, 16, 1)))
+void mmult(__global int* a, __global int* b, __global int* output, __local int *B)
 {
-  int r = get_global_id(0);		//r=i			//r=row , c=column
+	int index, c;
+  int r = get_global_id(0);		//r=i		r=row , c=column
+	int iloc = get_local_id(0);
+	int nloc = get_local_size(0);
+
+	printf("[%d], [%d], [%d]\n",  get_local_size(0),  get_local_size(1),  get_local_size(2)); 
+	int A[16];
+
   int rank = get_global_size(0);
-	if(r < rank)
+	printf("get_global_size: %d\n", get_global_size(0));
+	
+	for (index = 0; index < rank; index++)
 	{
-		for (int c = 0; c < rank; c++) {		//c=j
-
-			int running = 0;			//running = tmp
-			for (int index=0; index<rank; index++) {		//index = k
-				int aIndex = r*rank + index;
-				int bIndex = index*rank + c;
-				running +=  a[aIndex] * b[bIndex];
-			}
-
-			output[r*rank + c] = running;
-		}
+		A[index] = A[r*rank+index];
+	//	printf("A[index]: %d\n",A[index]);
 	}
-  //return;
+
+	for (c = 0; c < rank; c++) 									//c=j
+	{		
+			for (index=iloc; index<rank; index+=nloc) 	//index = k
+			{	
+				B[index] = B[index*rank+c];
+			}
+			barrier(CLK_LOCAL_MEM_FENCE);
+			int running = 0;			//running = tmp
+			for (index = 0; index < rank; index++)
+			{
+				running += A[index] * B[index];
+			}
+			output[r*rank + c] += running;
+		//	printf("output: %d\n", running);
+			barrier(CLK_LOCAL_MEM_FENCE);
+	}
+	//return;
+
 }

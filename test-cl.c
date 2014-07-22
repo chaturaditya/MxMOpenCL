@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <CL/opencl.h>
 
-#define MATRIX_RANK 512
+#define MATRIX_RANK 16
 #define DATA_SIZE MATRIX_RANK*MATRIX_RANK
 const unsigned int SUCCESS = 0;
 
@@ -259,35 +259,38 @@ int main(int argc, char** argv){
   err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_a);
   err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &input_b);
   err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &output);
+	err |= clSetKernelArg(kernel, 3, sizeof(int)*MATRIX_RANK, NULL);
+
+	
   if (err != CL_SUCCESS)
   {
     printf("Error: Failed to set kernel arguments! %d\n", err);
     printf("Test failed\n");
     return EXIT_FAILURE;
   }
-
   // Execute the kernel over the entire range of our 1d input data set
   // using the maximum number of work group items for this device
   //
 
     global[0] = MATRIX_RANK;
     global[1] = MATRIX_RANK;
-    local[0] = MATRIX_RANK/16;
-    local[1] = MATRIX_RANK/16;
+    local[0] = MATRIX_RANK;
+    local[1] = MATRIX_RANK	;
     clock_t kernel_begin, kernel_end;                                                                                                                    
-    double kernel_time;                                                                                                                     
+    double kernel_time;                          
+                                                                                           
     kernel_begin = clock();  
-
 
     err = clEnqueueNDRangeKernel(commands, 
                                 kernel, 
                                 1, 
                                 NULL, 
                                 (size_t*)&global, 
-                                /*(size_t*)&local*/NULL, 
+                                (size_t*)&local, 
                                 0, 
                                 NULL, 
                                 &event);
+
     if (err){
         printf("Error: Failed to execute kernel! %d\n", err);
         printf("Test failed\n");

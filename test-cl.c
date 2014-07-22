@@ -13,7 +13,8 @@
 #include <sys/stat.h>
 #include <CL/opencl.h>
 
-#define MATRIX_RANK 16
+#define MATRIX_RANK 1024
+#define BLOCK_SIZE 32
 #define DATA_SIZE MATRIX_RANK*MATRIX_RANK
 const unsigned int SUCCESS = 0;
 
@@ -274,8 +275,8 @@ int main(int argc, char** argv){
 
     global[0] = MATRIX_RANK;
     global[1] = MATRIX_RANK;
-    local[0] = MATRIX_RANK;
-    local[1] = MATRIX_RANK	;
+    local[0] = BLOCK_SIZE;
+    local[1] = BLOCK_SIZE	;
     clock_t kernel_begin, kernel_end;                                                                                                                    
     double kernel_time;                          
                                                                                            

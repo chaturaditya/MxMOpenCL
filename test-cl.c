@@ -14,7 +14,7 @@
 #include <CL/opencl.h>
 
 #define MATRIX_RANK 1024
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE MATRIX_RANK/8
 #define DATA_SIZE MATRIX_RANK*MATRIX_RANK
 const unsigned int SUCCESS = 0;
 
@@ -89,7 +89,7 @@ int main(int argc, char** argv){
     return EXIT_FAILURE;
   }
 
-    if(show_info(platform[1]) != SUCCESS){
+    if(show_info(platform[0]) != SUCCESS){
         printf("Error: Showing information!\n");
         printf("Test failed\n");
         return EXIT_FAILURE;
@@ -100,8 +100,8 @@ int main(int argc, char** argv){
     fpga = 1;
 #endif
 
-    err = clGetDeviceIDs(platform[1], 
-                        fpga ? CL_DEVICE_TYPE_ACCELERATOR : CL_DEVICE_TYPE_CPU,
+    err = clGetDeviceIDs(platform[0], 
+                        fpga ? CL_DEVICE_TYPE_ACCELERATOR : CL_DEVICE_TYPE_GPU,
                         1, 
                         &device_id, 
                         NULL);
@@ -274,9 +274,9 @@ int main(int argc, char** argv){
   //
 
     global[0] = MATRIX_RANK;
-    global[1] = MATRIX_RANK;
+    //global[1] = MATRIX_RANK;
     local[0] = BLOCK_SIZE;
-    local[1] = BLOCK_SIZE	;
+    //local[1] = BLOCK_SIZE;
     clock_t kernel_begin, kernel_end;                                                                                                                    
     double kernel_time;                          
                                                                                            
@@ -287,7 +287,7 @@ int main(int argc, char** argv){
                                 1, 
                                 NULL, 
                                 (size_t*)&global, 
-                                (size_t*)&local, 
+                               (size_t*)&local, 
                                 0, 
                                 NULL, 
                                 &event);

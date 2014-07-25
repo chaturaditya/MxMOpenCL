@@ -1,7 +1,7 @@
 #define RANK 1024
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 128
 
-__kernel __attribute__ ((reqd_work_group_size(BLOCK_SIZE, BLOCK_SIZE, 1)))
+__kernel __attribute__ ((reqd_work_group_size(BLOCK_SIZE, 1, 1)))
 void mmult(__global int* a, __global int* b, __global int* output, __local int* B)
 {
 
